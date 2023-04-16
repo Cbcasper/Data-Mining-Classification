@@ -18,9 +18,27 @@ LOW_INCOME_ACCEPTANCE_RATE = 0.05
 EXISTING_CUSTOMERS = "existing-customers.xlsx"
 POTENTIAL_CUSTOMERS = "potential-customers.xlsx"
 
+def display(title, message):
+    print()
+    print(title, message)
+
 def load_data(file):
     dataframe = pd.read_excel(os.path.join("data", file), index_col=0)
-    return dataframe.drop("education", axis=1)
+    dataframe = dataframe.drop("education", axis=1)
+
+    number_of_rows, _ = dataframe.shape
+    missing_values = str(dataframe.isna().sum(axis=0)).replace("\n", "\n\t\t")
+    isna_counts = dataframe.isna().sum(axis=1).value_counts()
+
+    print()
+    print("-" * 25)
+    print(f"Loading dataset {file}")
+    print(f"\tNumber of rows: {number_of_rows}")
+    print(f"\tNumber of missing values per feature:\n\t\t{missing_values}")
+    print(f"\tNumber of rows with a missing value: {number_of_rows - isna_counts.iloc[0]}")
+    print(f"\t{number_of_rows - isna_counts.iloc[0]}/{number_of_rows} or " + \
+          f"{(number_of_rows - isna_counts.iloc[0]) / number_of_rows * 100:.2f} percent rows with missing values")
+    return dataframe
 
 def run_classifier(classifier, features, labels):
     train_features, test_features, train_labels, test_labels = train_test_split(features, labels, test_size=0.2)
@@ -56,7 +74,11 @@ def compute_profit(predictions, accuracy):
     high_income = HIGH_INCOME_PROFIT * HIGH_INCOME_ACCEPTANCE_RATE
     low_income = LOW_INCOME_PROFIT * LOW_INCOME_ACCEPTANCE_RATE
     total_expected_profit = high_income * accuracy * customers - low_income * (1 - accuracy) * customers
-    print(total_expected_profit)
+    print("-" * 25)
+    print(f"Results")
+    print(f"\tClassifier test accuracy: {accuracy:.2f}")
+    print(f"\tNumbers of potential customers to be recruited: {customers}")
+    print(f"\tTotal expected profit: {total_expected_profit:.2f}")
 
 @logger.catch
 def main():
